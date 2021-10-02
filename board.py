@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 import random
 from player import Player
+import time
 
 @dataclass
 class Board:
@@ -9,6 +10,7 @@ class Board:
     kyoku_num: int = 0
     dora_makers: str = ''
     wall_tiles: list = field(default_factory=list)
+    teban: int = 0
 
     def start(self):
         """
@@ -35,9 +37,17 @@ class Board:
         print('初期山', self.wall_tiles)
     
     def game(self):
+        print('game開始')
         self.start()
         for i in range(60):
-            pass
+            player = self.player_list[self.teban]
+            tsumo_hai = self.wall_tiles.pop(0)
+            dahai = player.turn(tsumo_hai)
+            print('プレイヤー', self.teban, '打牌', dahai)
+
+            # 次の手番にする
+            self.teban = (self.teban + 1 + 4) % 4
+        print('game終了')
 
 HAI_LIST = ['1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m',
 '1p', '2p', '3p', '4p', '5p', '6p', '7p', '8p', '9p',
@@ -47,4 +57,8 @@ HAI_LIST = ['1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m',
 HAI_LIST_RED = HAI_LIST + ['0m', '0p', '0s']
 
 board = Board(player_list=[Player(), Player(), Player(), Player()])
+
+start = time.time()
 board.game()
+elapsed_time = time.time() - start
+print ("実行時間:{0}".format(elapsed_time) + "[sec]")
