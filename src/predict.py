@@ -17,8 +17,10 @@ class Predictor:
 
     def predict(self, df):
         start = time.time()
+        seq = PaihuDataSequence(df)
+        encoded_x = np.expand_dims(seq.__getitem__(0)[0][0], axis=0)
 
-        pred = self.model.predict(PaihuDataSequence(df))
+        pred = self.model(encoded_x)
         prob_list = np.round(pred[0], 2)
         # print(np.round(pred, 2))
 
@@ -26,3 +28,10 @@ class Predictor:
         print("打牌決定時間:{0}".format(elapsed_time) + "[sec]")
 
         return np.argmax(pred[0]), prob_list
+    
+    def multi_predict(self, df):
+        seq = PaihuDataSequence(df)
+
+        pred = self.model.predict(seq)
+        max_indexes = np.argmax(pred, axis=1)
+        return max_indexes
