@@ -10,6 +10,8 @@ class Player:
     clf = Predictor()
 
     def get_dahai(self, states):
+        if len(states) == 0:
+            return []
         # 打牌を決定する、手牌からは取り除かない
         records = pd.DataFrame()
         for state in states:

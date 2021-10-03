@@ -5,10 +5,10 @@ import random
 import time
 import numpy as np
 import pandas as pd
+import sys
 
 @dataclass
 class Worker:
-    # board: list = field(default_factory=list)
 
     def run_games(self, learner, opponent, num_games=1):
         idxs_to_unfinished_states = [Board(learner=(i + 4) % 4) for i in range(num_games)]
@@ -17,7 +17,7 @@ class Worker:
         [state.start_kyoku() for state in idxs_to_unfinished_states]
 
         # while len(idxs_to_unfinished_states) > 0:
-        for i in range(10):
+        for i in range(70):
             print('順目', i)
 
             # 自分のツモ番
@@ -70,9 +70,11 @@ w = Worker()
 learner = Player()
 opponent = Player()
 
+num_games = int(sys.argv[1]) if sys.argv[1] is not None else 4
+
 start = time.time()
 
-w.run_games(learner, opponent, 4)
+w.run_games(learner, opponent, num_games)
 
 elapsed_time = time.time() - start
 print ("実行時間:{0}".format(elapsed_time) + "[sec]")

@@ -3,6 +3,7 @@ import random
 import time
 import numpy as np
 import pandas as pd
+from modules.agari_check import agari_check, can_reach
 
 @dataclass
 class Board:
@@ -32,8 +33,15 @@ class Board:
         self.tsumo_player = (self.tsumo_player + 1 + 4) % 4
 
     def tsumo(self):
-        # 手牌にツモを加える
         tsumo_hai = self.wall_tiles.pop(0)
+
+        # 上がり判定を行う
+        result = agari_check(self.private_tiles[self.tsumo_player], tsumo_hai, True)
+        if result.yaku is not None:
+            print('和了')
+        # シャンテン数
+        can_reach(self.private_tiles[self.tsumo_player])
+        
         self.private_tiles[self.tsumo_player] += [tsumo_hai]
     
     def dahai(self, hai):
