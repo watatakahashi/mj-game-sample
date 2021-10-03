@@ -50,8 +50,6 @@ class Worker:
             # ゲームが終了していたらstatesから除外する
             for idx in just_finished:
                 del idxs_to_unfinished_states[idx]
-            
-        print(idxs_to_unfinished_states)
 
 @dataclass
 class Game:
