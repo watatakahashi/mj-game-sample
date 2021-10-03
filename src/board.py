@@ -7,11 +7,18 @@ from modules.agari_check import agari_check, can_reach
 
 @dataclass
 class Board:
+    
+    # 学習者
     learner: int
+
+    # ゲーム終了フラグ
+    is_end_of_game: bool = False
+    
     tsumo_player: int = 0
     private_tiles: list = field(default_factory=list)
     wall_tiles: list = field(default_factory=list)
     discards: list = field(default_factory=list)
+
     
     def start_kyoku(self):
         """
@@ -42,9 +49,10 @@ class Board:
 
         # 上がり判定を行う
         result = agari_check(self.private_tiles[self.tsumo_player], tsumo_hai, True)
-        # print(result)
-        # if result.yaku is not None:
-            # print('和了')
+        if result.yaku is not None:
+            # TODO: 上がった瞬間一旦ゲームを終了する
+            self.is_end_of_game = True
+
         # シャンテン数
         can_reach(self.private_tiles[self.tsumo_player])
         
