@@ -11,8 +11,6 @@ class Worker:
     # board: list = field(default_factory=list)
 
     def run_games(self, learner, opponent, num_games=1):
-        # states = [Game(Board()) for _ in range(num_games)]
-        # idxs_to_unfinished_states = [{'state': states[i], 'learner': (i + 4) % 4} for i in range(num_games)]
         idxs_to_unfinished_states = [Board(learner=(i + 4) % 4) for i in range(num_games)]
 
         # 東1局を開始する
@@ -23,7 +21,6 @@ class Worker:
             # print('順目', i)
 
             # 自分のツモ番
-            # learner_states = list(filter(lambda state: state['state'].tsumo_player() == state['learner'], idxs_to_unfinished_states))
             learner_states = list(filter(lambda state: state.tsumo_player == state.learner, idxs_to_unfinished_states))
             dahais = learner.get_dahai(learner_states)
 
@@ -97,7 +94,7 @@ class Board:
     def generate_state_record(self):
         df = pd.DataFrame([[
         0,
-        ''.join(self.private_tiles[self.tsumo_player]),
+        ''.join(self.private_tiles[self.tsumo_player]), # ツモ番のプレイヤー
         '',
         '',
         '',
@@ -130,7 +127,10 @@ HAI_LIST = ['1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m',
 '1s', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s',
 '1z', '2z', '3z', '4z', '5z', '6z', '7z']
 
-HAI_LIST_RED = HAI_LIST + ['0m', '0p', '0s']
+HAI_TYPES = ['0m', '1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m',
+'0p', '1p', '2p', '3p', '4p', '5p', '6p', '7p', '8p', '9p',
+'0s', '1s', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s',
+'1z', '2z', '3z', '4z', '5z', '6z', '7z']
 
 @dataclass
 class Game:
@@ -160,15 +160,23 @@ class Player:
         records = pd.DataFrame()
         for state in states:
             records = records.append(state.generate_state_record())
-        print('records.shape', records.shape)
         
         start = time.time()
+        
         max_indexes = self.clf.multi_predict(records)
-        elapsed_time = time.time() - start
-        print ("予測実行時間:{0}".format(elapsed_time) + "[sec]")
 
-        dahais = [random.choice(s.private_tiles[s.tsumo_player]) for s in states]
-        return dahais
+        elapsed_time = time.time() - start
+        # print ("予測実行時間:{0}".format(elapsed_time) + "[sec]")
+
+        dahais = [HAI_TYPES[i] for i in max_indexes]
+        print(max_indexes, dahais)
+
+        # 手牌になければランダム
+        select_dahais = []
+        for state, dahai in zip(states, dahais):
+            tehai = state.private_tiles[state.tsumo_player]
+            select_dahais += [dahai if dahai in tehai else random.choice(tehai)]
+        return select_dahais
     
 
 COLMUN=['player', 'privateTehaiString', 'myPlayerDiscard', 'lowerPlayerDiscard',
@@ -183,12 +191,13 @@ COLMUN=['player', 'privateTehaiString', 'myPlayerDiscard', 'lowerPlayerDiscard',
         ]
 
 
-start = time.time()
-
 w = Worker()
 learner = Player()
 opponent = Player()
-w.run_games(learner, opponent, 16)
+
+start = time.time()
+
+w.run_games(learner, opponent, 4)
 
 elapsed_time = time.time() - start
 print ("実行時間:{0}".format(elapsed_time) + "[sec]")
