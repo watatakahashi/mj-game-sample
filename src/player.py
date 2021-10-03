@@ -1,75 +1,37 @@
 from dataclasses import dataclass, field
 import random
+import time
+from predict import Predictor
 import numpy as np
 import pandas as pd
-from predict import Predictor
-
 
 @dataclass
 class Player:
-    tehai: list = field(default_factory=list)
     clf = Predictor()
 
-    def start(self, tehai):
-        self.tehai = tehai
+    def get_dahai(self, states):
+        # 打牌を決定する、手牌からは取り除かない
+        records = pd.DataFrame()
+        for state in states:
+            records = records.append(state.generate_state_record())
+        
+        start = time.time()
+        
+        max_indexes = self.clf.multi_predict(records)
 
-    def turn(self, tsumo_hai):
-        self.__tsumo(tsumo_hai)
-        dahai = self.__dahai()
-        return dahai
-    def __tsumo(self, hai):
-        self.tehai += [hai]
-    
-    def __dahai(self):
-        df = self.__create_predict_data()
-        pre, prob_list = self.clf.predict(df)
+        elapsed_time = time.time() - start
+        # print ("予測実行時間:{0}".format(elapsed_time) + "[sec]")
 
-        dahai = random.choice(self.tehai)
-        self.tehai.remove(dahai)
-        return dahai
-    def __create_predict_data(self):
-        df = pd.DataFrame([[
-            0,
-            ''.join(self.tehai),
-            '',
-            '',
-            '',
-            '',
-            0,
-            0,
-            '1z',
-            0,
-            0,
-            0,
-            0,
-            '',
-            '',
-            '',
-            '',
-            25000,
-            25000,
-            25000,
-            25000,
-            '',
-            '',
-            '',
-            '',
-            '1z',
-            ]], columns=COLMUN)
-        return df
+        dahais = [HAI_TYPES[i] for i in max_indexes]
 
-COLMUN=['player', 'privateTehaiString', 'myPlayerDiscard', 'lowerPlayerDiscard',
-        'oppositePlayerDiscard', 'upperPlayerDiscard', 'bakaze',
-        'kyokuNum', 'doraOpen', 'isMyPlayerReach',
-        'isLowerPlayerReach', 'isOppositePlayerReach', 'isUpperPlayerReach',
-        'myPlayerMeld', 'lowerPlayerMeld', 'oppositePlayerMeld',
-        'upperPlayerMeld', 'myPlayerPoints', 'lowerPlayerPoints',
-        'oppositePlayerPoints', 'upperPlayerPoints',
-        'myPlayerSafetyTile', 'lowerPlayerSafetyTile', 'oppositePlayerSafetyTile', 'upperPlayerSafetyTile',
-        'selectedPai',
-        ]
+        # 手牌になければランダム
+        select_dahais = []
+        for state, dahai in zip(states, dahais):
+            tehai = state.private_tiles[state.tsumo_player]
+            select_dahais += [dahai if dahai in tehai else random.choice(tehai)]
+        return select_dahais
 
-# p = Player()
-# p.start(['1m', '2m', '3m', '4m'])
-# dahai = p.turn('5m')
-# print(p.tehai, dahai)
+HAI_TYPES = ['0m', '1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m',
+'0p', '1p', '2p', '3p', '4p', '5p', '6p', '7p', '8p', '9p',
+'0s', '1s', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s',
+'1z', '2z', '3z', '4z', '5z', '6z', '7z']
