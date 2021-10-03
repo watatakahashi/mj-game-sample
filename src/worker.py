@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from board import Board
-from player import Player
+from player import Player, RandomPlayer
 import random
 import time
 import numpy as np

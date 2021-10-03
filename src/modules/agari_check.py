@@ -6,7 +6,12 @@ from mahjong.shanten import Shanten
 from mahjong.tile import TilesConverter
 
 def agari_check(tehai, tsumo, is_tsumo):
-    tehai_manpinsou_dict = get_manpinsou_dict(tehai)
+    if len(tehai) not in [4, 7, 10, 13]:
+        raise ValueError('手牌の長さが不正です tehai=', tehai) 
+    # NOTE: 和了判定はツモを手牌に加える必要があるので、一度加える
+    tehai_and_tsumo = tehai + [tsumo]
+    
+    tehai_manpinsou_dict = get_manpinsou_dict(tehai_and_tsumo)
 
     tiles = TilesConverter.string_to_136_array(
         man=tehai_manpinsou_dict['m'],
@@ -50,7 +55,7 @@ def can_reach(tehai):
         honors=tehai_manpinsou_dict['h']
         )
     shanten = shanten.calculate_shanten(tiles)
-    print('手牌: ', tehai_manpinsou_dict, 'シャンテン数: ',shanten)
+    # print('手牌: ', tehai_manpinsou_dict, 'シャンテン数: ',shanten)
     return shanten == 0
 
 def get_manpinsou_dict(tehai):

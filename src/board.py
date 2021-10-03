@@ -11,6 +11,7 @@ class Board:
     tsumo_player: int = 0
     private_tiles: list = field(default_factory=list)
     wall_tiles: list = field(default_factory=list)
+    discards: list = field(default_factory=list)
     
     def start_kyoku(self):
         """
@@ -24,12 +25,16 @@ class Board:
         self.private_tiles[1] = self.wall_tiles[INIT_TEHAI_NUM:INIT_TEHAI_NUM * 2]
         self.private_tiles[2] = self.wall_tiles[INIT_TEHAI_NUM * 2:INIT_TEHAI_NUM * 3]
         self.private_tiles[3] = self.wall_tiles[INIT_TEHAI_NUM * 3:INIT_TEHAI_NUM * 4]
+
         self.wall_tiles = self.wall_tiles[INIT_TEHAI_NUM * 4:]
+
+        self.discards = [[],[],[],[]]
 
         # 第一ツモ
         self.tsumo()
     
     def next_player(self):
+        # 次のプレイヤーの手番に移動する
         self.tsumo_player = (self.tsumo_player + 1 + 4) % 4
 
     def tsumo(self):
@@ -37,8 +42,9 @@ class Board:
 
         # 上がり判定を行う
         result = agari_check(self.private_tiles[self.tsumo_player], tsumo_hai, True)
-        if result.yaku is not None:
-            print('和了')
+        # print(result)
+        # if result.yaku is not None:
+            # print('和了')
         # シャンテン数
         can_reach(self.private_tiles[self.tsumo_player])
         
@@ -47,6 +53,9 @@ class Board:
     def dahai(self, hai):
         # 打牌を行い手牌から取り除く
         self.private_tiles[self.tsumo_player].remove(hai)
+
+        # 河に追加
+        self.discards[self.tsumo_player] += [hai]
 
     def __init_wall_tiles(self):
         """
@@ -58,12 +67,12 @@ class Board:
     
     def generate_state_record(self):
         df = pd.DataFrame([[
-        0,
+        self.tsumo_player, #TODO: 親番を0とするので調整する
         ''.join(self.private_tiles[self.tsumo_player]), # ツモ番のプレイヤー
-        '',
-        '',
-        '',
-        '',
+        ''.join(self.discards[(self.tsumo_player + 4) % 4]),
+        ''.join(self.discards[(self.tsumo_player + 4 + 1) % 4]),
+        ''.join(self.discards[(self.tsumo_player + 4 + 2) % 4]),
+        ''.join(self.discards[(self.tsumo_player + 4 + 3) % 4]),
         0,
         0,
         '1z',

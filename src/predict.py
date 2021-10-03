@@ -31,7 +31,9 @@ class Predictor:
     
     def multi_predict(self, df):
         seq = PaihuDataSequence(df)
-
+        # print(df.privateTehaiString)
         pred = self.model.predict(seq)
+        # print('pred', pred)
         max_indexes = np.argmax(pred, axis=1)
+        # print('max_indexes', np.round(max_indexes, 2))
         return max_indexes

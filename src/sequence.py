@@ -7,7 +7,7 @@ import modules.encode as encode
 class PaihuDataSequence(Sequence):
   
     def __init__(self, df, batch_size=256, vmstat=False):
-        self.df = df.sample(frac=1)
+        self.df = df
         self.batch_size = batch_size
         self.vmstat = vmstat
 
