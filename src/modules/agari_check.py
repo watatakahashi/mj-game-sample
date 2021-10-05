@@ -6,7 +6,7 @@ from mahjong.shanten import Shanten
 from mahjong.tile import TilesConverter
 
 
-def agari_check(tehai, tsumo, is_tsumo):
+def agari_check(tehai, tsumo, is_tsumo, is_riichi=False):
     if len(tehai) not in [4, 7, 10, 13]:
         raise ValueError('手牌の長さが不正です tehai=', tehai)
     # NOTE: 和了判定はツモを手牌に加える必要があるので、一度加える
@@ -36,7 +36,7 @@ def agari_check(tehai, tsumo, is_tsumo):
 
     result = calculator.estimate_hand_value(
         tiles, win_tile, config=HandConfig(
-            is_tsumo=is_tsumo, options=OptionalRules(
+            is_tsumo=is_tsumo, is_riichi=is_riichi, options=OptionalRules(
                 has_open_tanyao=True, has_aka_dora=True)))
 
     # if result.yaku is not None:

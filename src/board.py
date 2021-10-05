@@ -16,12 +16,26 @@ class Board:
     # ツモ者
     tsumo_player: int = 0
 
+    # 最終ツモ
+    latest_tsumo: str = None
+
     # 最終打牌
     latest_dahai: str = None
 
+    # 手牌
     private_tiles: list = field(default_factory=list)
+
+    # 山
     wall_tiles: list = field(default_factory=list)
+
+    # 捨て牌
     discards: list = field(default_factory=list)
+
+    # リーチ可否
+    reaches: list = field(default_factory=list)
+
+    # ドラ表示牌
+    dora_open: str = None
 
     def start_kyoku(self):
         """
@@ -42,6 +56,10 @@ class Board:
 
         self.discards = [[], [], [], []]
 
+        self.reaches = [False, False, False, False]
+
+        self.dora_open = self.wall_tiles.pop(0)
+
         # 第一ツモ
         self.tsumo()
 
@@ -49,42 +67,65 @@ class Board:
         # 次のプレイヤーの手番に移動する
         self.tsumo_player = (self.tsumo_player + 1 + 4) % 4
 
+    def is_tsumo_player_reach(self):
+        """
+        ツモ者がリーチしているかどうかを確認する
+        """
+        return self.reaches[self.tsumo_player]
+
     def tsumo(self):
-        tsumo_hai = self.wall_tiles.pop(0)
+        """
+        ツモ、ツモアガリ判定を行い、手牌にツモ牌を加える
+        """
+        self.latest_tsumo = self.wall_tiles.pop(0)
 
         # 上がり判定を行う
-        result = agari_check(
-            self.private_tiles[self.tsumo_player], tsumo_hai, True)
+        result = agari_check(self.private_tiles[self.tsumo_player],
+                             self.latest_tsumo,
+                             is_tsumo=True,
+                             is_riichi=self.reaches[self.tsumo_player])
         if result.yaku is not None:
             print('ツモ和了', result, result.yaku)
             # TODO: 上がった瞬間一旦ゲームを終了する
             self.is_end_of_game = True
 
-        # シャンテン数
-        can_reach(self.private_tiles[self.tsumo_player])
-
-        self.private_tiles[self.tsumo_player] += [tsumo_hai]
+        self.private_tiles[self.tsumo_player] += [self.latest_tsumo]
 
     def dahai(self, hai):
         """
-        手牌から打牌を取り除く、ロン和了の判定を行う、河に打牌を追加する
+        手牌から打牌を取り除く、ロン和了の判定を行う、リーチ判定をする、河に打牌を追加する
+        リーチ時はツモ切り
         """
-        self.private_tiles[self.tsumo_player].remove(hai)
+        if self.reaches[self.tsumo_player]:
+            self.private_tiles[self.tsumo_player].remove(self.latest_tsumo)
+        else:
+            self.private_tiles[self.tsumo_player].remove(hai)
 
         self.latest_dahai = hai
         self.__check_ron_agari()
+
+        # TODO: 一旦リーチできるならリーチする
+        # シャンテン数
+        is_reach = not self.reaches[self.tsumo_player] and can_reach(
+            self.private_tiles[self.tsumo_player])
+        if is_reach:
+            print('リーチする', self.tsumo_player, is_reach)
+            self.reaches[self.tsumo_player] = True
 
         # 河に追加
         self.discards[self.tsumo_player] += [hai]
 
     def __check_ron_agari(self):
-        # 打牌者以外の3人がロン和了可能かどうかをチェックする
+        """
+        打牌者以外の3人がロン和了可能かどうかをチェックする
+        """
         for i in range(3):
             player = (self.tsumo_player + (i + 1) + 4) % 4
             result = agari_check(
                 tehai=self.private_tiles[player],
                 tsumo=self.latest_dahai,
-                is_tsumo=False)
+                is_tsumo=False,
+                is_riichi=self.reaches[player])
 
             # TODO: 現在一人ずつロンチェックしているので、ダブロンに対応する
             if result.yaku is not None:
@@ -109,11 +150,11 @@ class Board:
             ''.join(self.discards[(self.tsumo_player + 4 + 3) % 4]),
             0,
             0,
-            '1z',
+            self.dora_open,
             0,
-            0,
-            0,
-            0,
+            self.discards[(self.tsumo_player + 4 + 1) % 4],
+            self.discards[(self.tsumo_player + 4 + 2) % 4],
+            self.discards[(self.tsumo_player + 4 + 3) % 4],
             '',
             '',
             '',
