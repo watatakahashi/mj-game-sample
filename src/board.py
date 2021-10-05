@@ -33,8 +33,10 @@ class Board:
         self.private_tiles = [[], [], [], []]
         self.private_tiles[0] = self.wall_tiles[0:INIT_TEHAI_NUM]
         self.private_tiles[1] = self.wall_tiles[INIT_TEHAI_NUM:INIT_TEHAI_NUM * 2]
-        self.private_tiles[2] = self.wall_tiles[INIT_TEHAI_NUM * 2:INIT_TEHAI_NUM * 3]
-        self.private_tiles[3] = self.wall_tiles[INIT_TEHAI_NUM * 3:INIT_TEHAI_NUM * 4]
+        self.private_tiles[2] = self.wall_tiles[INIT_TEHAI_NUM *
+                                                2:INIT_TEHAI_NUM * 3]
+        self.private_tiles[3] = self.wall_tiles[INIT_TEHAI_NUM *
+                                                3:INIT_TEHAI_NUM * 4]
 
         self.wall_tiles = self.wall_tiles[INIT_TEHAI_NUM * 4:]
 
@@ -54,6 +56,7 @@ class Board:
         result = agari_check(
             self.private_tiles[self.tsumo_player], tsumo_hai, True)
         if result.yaku is not None:
+            print('ツモ和了', result, result.yaku)
             # TODO: 上がった瞬間一旦ゲームを終了する
             self.is_end_of_game = True
 
@@ -63,7 +66,9 @@ class Board:
         self.private_tiles[self.tsumo_player] += [tsumo_hai]
 
     def dahai(self, hai):
-        # 打牌を行い手牌から取り除く
+        """
+        手牌から打牌を取り除く、ロン和了の判定を行う、河に打牌を追加する
+        """
         self.private_tiles[self.tsumo_player].remove(hai)
 
         self.latest_dahai = hai
@@ -74,7 +79,17 @@ class Board:
 
     def __check_ron_agari(self):
         # 打牌者以外の3人がロン和了可能かどうかをチェックする
-        pass
+        for i in range(3):
+            player = (self.tsumo_player + (i + 1) + 4) % 4
+            result = agari_check(
+                tehai=self.private_tiles[player],
+                tsumo=self.latest_dahai,
+                is_tsumo=False)
+
+            # TODO: 現在一人ずつロンチェックしているので、ダブロンに対応する
+            if result.yaku is not None:
+                print('ロン和了', result, result.yaku)
+                self.is_end_of_game = True
 
     def __init_wall_tiles(self):
         """

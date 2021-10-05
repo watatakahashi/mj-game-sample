@@ -39,8 +39,7 @@ def agari_check(tehai, tsumo, is_tsumo):
             is_tsumo=is_tsumo, options=OptionalRules(
                 has_open_tanyao=True, has_aka_dora=True)))
 
-    if result.yaku is not None:
-        print('和了', result)
+    # if result.yaku is not None:
 
     return result
 
