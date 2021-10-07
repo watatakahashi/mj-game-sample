@@ -63,8 +63,7 @@ class Board:
         """
         局を開始する
         """
-        # print('{}-{}を開始'.format(self.bakaze, self.kyoku_num))
-        print(f'{self.bakaze}-{self.kyoku_num}を開始')
+        # print(f'{self.bakaze}-{self.kyoku_num}を開始')
         if self.bakaze == 0 and self.kyoku_num == 0:
             self.__start_game()
 
@@ -137,12 +136,17 @@ class Board:
         リーチ時はツモ切り
         最後に局終了処理、または次のプレイヤーのツモを行う
         """
-        if self.reaches[self.tsumo_player]:
-            self.private_tiles[self.tsumo_player].remove(self.latest_tsumo)
-        else:
-            self.private_tiles[self.tsumo_player].remove(hai)
 
-        self.latest_dahai = hai
+        if len(hai) != 2:
+            raise ValueError(f'牌の長さが不正 hai={hai}')
+
+        if self.reaches[self.tsumo_player]:
+            self.latest_dahai = self.latest_tsumo
+        else:
+            self.latest_dahai = hai
+
+        self.private_tiles[self.tsumo_player].remove(self.latest_dahai)
+
         self.__check_ron_agari()
 
         if self.is_end_of_kyoku:
@@ -158,7 +162,7 @@ class Board:
             self.reaches[self.tsumo_player] = True
 
         # 河に追加
-        self.discards[self.tsumo_player] += [hai]
+        self.discards[self.tsumo_player] += [self.latest_dahai]
 
         # ツモ番がない場合は流局
         if len(self.wall_tiles) <= MIN_LEAVE_WALL_COUNT:
@@ -185,7 +189,6 @@ class Board:
             # TODO: 現在一人ずつロンチェックしているので、ダブロンに対応する
             if result.yaku is not None:
                 print('ロン和了', result, result.yaku)
-                # self.is_end_of_game = True
                 self.is_end_of_kyoku = True
 
     def __init_wall_tiles(self):
@@ -228,9 +231,9 @@ class Board:
             self.kyoku_num,
             self.dora_open,
             0,
-            self.discards[(self.tsumo_player + 4 + 1) % 4],
-            self.discards[(self.tsumo_player + 4 + 2) % 4],
-            self.discards[(self.tsumo_player + 4 + 3) % 4],
+            self.reaches[(self.tsumo_player + 4 + 1) % 4],
+            self.reaches[(self.tsumo_player + 4 + 2) % 4],
+            self.reaches[(self.tsumo_player + 4 + 3) % 4],
             '',
             '',
             '',
