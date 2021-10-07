@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import random
+from board import Board
 # import time
 from predict import Predictor
 # import numpy as np
@@ -11,7 +12,7 @@ import pandas as pd
 class Player:
     clf = Predictor()
 
-    def get_dahai(self, states):
+    def get_dahai(self, states: Board):
         if len(states) == 0:
             return []
         # 打牌を決定する、手牌からは取り除かない

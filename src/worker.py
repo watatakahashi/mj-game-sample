@@ -1,9 +1,12 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from board import Board
 from player import Player
 # import random
 import time
 import sys
+
+import random
+random.seed(0)
 
 
 @dataclass
@@ -19,9 +22,9 @@ class Worker:
         # 東1局を開始する
         [state.start_kyoku() for state in idxs_to_unfinished_states.values()]
 
-        # while len(idxs_to_unfinished_states) > 0:
-        for i in range(70):
-            print('順目', i)
+        while len(idxs_to_unfinished_states) > 0:
+            # for i in range(500):
+            # print('順目', i)
 
             # 自分のツモ番
             learner_states = list(
@@ -52,33 +55,13 @@ class Worker:
             # 手番の更新とツモ、ツモ和了確認まで行う
             just_finished = []
             for key, state in idxs_to_unfinished_states.items():
-                state.next_player()
-                state.tsumo()
+                # state.__next_player()
+                # state.tsumo()
                 if state.is_end_of_game:
                     just_finished += [key]
             # ゲームが終了していたらstatesから除外する
             for idx in just_finished:
                 del idxs_to_unfinished_states[idx]
-
-
-@dataclass
-class Game:
-    # 学習者
-    learner: int
-    board: Board
-    points: list = field(default_factory=list)
-
-    def __post_init__(self):
-        self.points = [25000, 25000, 25000, 25000]
-
-    def next_player(self):
-        self.board.next_player()
-
-    def tsumo_player(self):
-        return self.board.tsumo_player
-
-    def tsumo(self):
-        self.board.tsumo()
 
 
 w = Worker()

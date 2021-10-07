@@ -3,15 +3,34 @@ import random
 import pandas as pd
 from modules.agari_check import agari_check, can_reach
 
+# 本来は14枚だがドラ表示牌を物理的に取り除くため一旦1枚減らしている
+# 厳密には変数になる
+MIN_LEAVE_WALL_COUNT = 13
+
 
 @dataclass
 class Board:
+    """
+    盤面クラス
+    外側から操作できる処理
+    - ツモ
+    - 打牌
+    """
 
     # 学習者
     learner: int
 
     # ゲーム終了フラグ
     is_end_of_game: bool = False
+
+    # 局終了フラグ
+    is_end_of_kyoku: bool = False
+
+    # 場風(0~2)
+    bakaze: int = 0
+
+    # 局数(0~3) = 現在親番のプレイヤー
+    kyoku_num: int = 0
 
     # ツモ者
     tsumo_player: int = 0
@@ -34,6 +53,9 @@ class Board:
     # リーチ可否
     reaches: list = field(default_factory=list)
 
+    # 得点、東1局親番をindex=0とする
+    points: list = field(default_factory=list)
+
     # ドラ表示牌
     dora_open: str = None
 
@@ -41,6 +63,11 @@ class Board:
         """
         局を開始する
         """
+        # print('{}-{}を開始'.format(self.bakaze, self.kyoku_num))
+        print(f'{self.bakaze}-{self.kyoku_num}を開始')
+        if self.bakaze == 0 and self.kyoku_num == 0:
+            self.__start_game()
+
         self.__init_wall_tiles()
 
         INIT_TEHAI_NUM = 13
@@ -60,10 +87,19 @@ class Board:
 
         self.dora_open = self.wall_tiles.pop(0)
 
+        # 局数が最初にツモる親番プレイヤーとなるため
+        self.tsumo_player = self.kyoku_num
+
         # 第一ツモ
         self.tsumo()
 
-    def next_player(self):
+    def __start_game(self):
+        """
+        ゲーム開始処理
+        """
+        self.points = [25000, 25000, 25000, 25000]
+
+    def __next_player(self):
         # 次のプレイヤーの手番に移動する
         self.tsumo_player = (self.tsumo_player + 1 + 4) % 4
 
@@ -87,14 +123,19 @@ class Board:
         if result.yaku is not None:
             print('ツモ和了', result, result.yaku)
             # TODO: 上がった瞬間一旦ゲームを終了する
-            self.is_end_of_game = True
+            # self.is_end_of_game = True
+            self.is_end_of_kyoku = True
 
         self.private_tiles[self.tsumo_player] += [self.latest_tsumo]
+
+        if self.is_end_of_kyoku:
+            self.__end_of_kyoku()
 
     def dahai(self, hai):
         """
         手牌から打牌を取り除く、ロン和了の判定を行う、リーチ判定をする、河に打牌を追加する
         リーチ時はツモ切り
+        最後に局終了処理、または次のプレイヤーのツモを行う
         """
         if self.reaches[self.tsumo_player]:
             self.private_tiles[self.tsumo_player].remove(self.latest_tsumo)
@@ -103,6 +144,10 @@ class Board:
 
         self.latest_dahai = hai
         self.__check_ron_agari()
+
+        if self.is_end_of_kyoku:
+            self.__end_of_kyoku()
+            return
 
         # TODO: 一旦リーチできるならリーチする
         # シャンテン数
@@ -114,6 +159,16 @@ class Board:
 
         # 河に追加
         self.discards[self.tsumo_player] += [hai]
+
+        # ツモ番がない場合は流局
+        if len(self.wall_tiles) <= MIN_LEAVE_WALL_COUNT:
+            self.is_end_of_kyoku = True
+
+        if self.is_end_of_kyoku:
+            self.__end_of_kyoku()
+        else:
+            self.__next_player()
+            self.tsumo()
 
     def __check_ron_agari(self):
         """
@@ -130,7 +185,8 @@ class Board:
             # TODO: 現在一人ずつロンチェックしているので、ダブロンに対応する
             if result.yaku is not None:
                 print('ロン和了', result, result.yaku)
-                self.is_end_of_game = True
+                # self.is_end_of_game = True
+                self.is_end_of_kyoku = True
 
     def __init_wall_tiles(self):
         """
@@ -140,16 +196,36 @@ class Board:
         self.wall_tiles = HAI_LIST * 4
         random.shuffle(self.wall_tiles)
 
+    def __end_of_kyoku(self):
+        """
+        局終了時の処理
+        """
+        self.is_end_of_kyoku = False
+
+        self.kyoku_num += 1
+        if self.kyoku_num > 3:
+            self.bakaze += 1
+            self.kyoku_num = 0
+
+        # ゲーム終了判定、一旦西入は考慮しない
+        if self.bakaze == 2:
+            self.is_end_of_game = True
+        else:
+            self.start_kyoku()
+
     def generate_state_record(self):
+        """
+        局面レコードを取得する
+        """
         df = pd.DataFrame([[
             self.tsumo_player,  # TODO: 親番を0とするので調整する
             ''.join(self.private_tiles[self.tsumo_player]),  # ツモ番のプレイヤー
-            ''.join(self.discards[(self.tsumo_player + 4) % 4]),
+            ''.join(self.discards[(self.tsumo_player + 4 + 0) % 4]),
             ''.join(self.discards[(self.tsumo_player + 4 + 1) % 4]),
             ''.join(self.discards[(self.tsumo_player + 4 + 2) % 4]),
             ''.join(self.discards[(self.tsumo_player + 4 + 3) % 4]),
-            0,
-            0,
+            self.bakaze,
+            self.kyoku_num,
             self.dora_open,
             0,
             self.discards[(self.tsumo_player + 4 + 1) % 4],
@@ -159,10 +235,10 @@ class Board:
             '',
             '',
             '',
-            25000,
-            25000,
-            25000,
-            25000,
+            self.points[(self.tsumo_player + 4 + 0) % 4],
+            self.points[(self.tsumo_player + 4 + 1) % 4],
+            self.points[(self.tsumo_player + 4 + 2) % 4],
+            self.points[(self.tsumo_player + 4 + 3) % 4],
             '',
             '',
             '',
