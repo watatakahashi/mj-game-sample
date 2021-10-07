@@ -3,9 +3,7 @@ import random
 from board import Board
 # import time
 from predict import Predictor
-# import numpy as np
 import pandas as pd
-# import modules.utils
 
 
 @dataclass
