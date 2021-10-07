@@ -78,7 +78,7 @@ opponent = Player()
 
 start = time.time()
 
-w.run_games(learner, opponent, num_games, seed)
+w.run_games(learner, opponent, int(num_games), int(seed))
 
 elapsed_time = time.time() - start
 print("実行時間:{0}".format(elapsed_time) + "[sec]")
