@@ -58,9 +58,13 @@ class Worker:
                 # state.tsumo()
                 if state.is_end_of_game:
                     just_finished += [key]
+                    print(f'ゲーム終了 idx={key}')
             # ゲームが終了していたらstatesから除外する
             for idx in just_finished:
                 del idxs_to_unfinished_states[idx]
+
+            # unfinished_len = len(idxs_to_unfinished_states.values())
+            # print(f'残りゲーム数={unfinished_len}')
 
 
 parser = argparse.ArgumentParser(description='麻雀の自己対戦')

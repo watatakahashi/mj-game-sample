@@ -63,7 +63,7 @@ class Board:
         """
         局を開始する
         """
-        # print(f'{self.bakaze}-{self.kyoku_num}を開始')
+        print(f'{self.bakaze}-{self.kyoku_num}を開始')
         if self.bakaze == 0 and self.kyoku_num == 0:
             self.__start_game()
 
