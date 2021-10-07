@@ -1,18 +1,17 @@
+from player import Player
+import argparse
 from dataclasses import dataclass
 from board import Board
-from player import Player
-# import random
 import time
-import sys
-
 import random
-random.seed(0)
 
 
 @dataclass
 class Worker:
 
-    def run_games(self, learner, opponent, num_games=1):
+    def run_games(self, learner, opponent, num_games=1, seed=0):
+        random.seed(seed)
+
         idxs_to_unfinished_states = {
             i: Board(
                 learner=(
@@ -64,15 +63,22 @@ class Worker:
                 del idxs_to_unfinished_states[idx]
 
 
+parser = argparse.ArgumentParser(description='麻雀の自己対戦')
+parser.add_argument('-c', '--count', default=4, help='試合数')
+parser.add_argument('-s', '--seed', default=0, help='乱数シード値')
+args = parser.parse_args()
+
+num_games: int = args.count
+seed: int = args.seed
+
 w = Worker()
+
 learner = Player()
 opponent = Player()
 
-num_games = int(sys.argv[1]) if sys.argv[1] is not None else 4
-
 start = time.time()
 
-w.run_games(learner, opponent, num_games)
+w.run_games(learner, opponent, num_games, seed)
 
 elapsed_time = time.time() - start
 print("実行時間:{0}".format(elapsed_time) + "[sec]")
