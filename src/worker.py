@@ -2,6 +2,7 @@ import argparse
 import random
 import time
 from dataclasses import dataclass
+from typing import Dict
 
 from board import Board
 from player import Player, PolicyPlayer
@@ -33,7 +34,7 @@ class Worker:
 
         while len(idxs_to_unfinished_states) > 0:
 
-            # 自分のツモ番
+            # 自分の打牌
             learner_states = list(
                 filter(
                     lambda state: state.tsumo_player == state.learner,
@@ -46,7 +47,10 @@ class Worker:
                 pass
                 # TODO: 打牌に対するアクション
 
-            # 自分以外のツモ番
+            idxs_to_unfinished_states = self.__exclude_end_of_game(
+                idxs_to_unfinished_states)
+
+            # 自分以外の打牌
             not_learner_state = list(
                 filter(
                     lambda state: state.tsumo_player != state.learner,
@@ -59,20 +63,24 @@ class Worker:
                 pass
                 # TODO: 打牌に対するアクション
 
-            # ゲームが終了していたらstatesから除外する
-            just_finished = []
-            for key, state in idxs_to_unfinished_states.items():
-                if state.is_end_of_game:
-                    just_finished += [key]
-                    print(f'ゲーム終了 idx={key}')
-            for idx in just_finished:
-                self.__save_to_csv(
-                    idxs_to_unfinished_states[idx].training_data)
-                print(idxs_to_unfinished_states[idx].training_data.shape)
-                del idxs_to_unfinished_states[idx]
+            idxs_to_unfinished_states = self.__exclude_end_of_game(
+                idxs_to_unfinished_states)
 
             # unfinished_len = len(idxs_to_unfinished_states.values())
             # print(f'残りゲーム数={unfinished_len}')
+
+    def __exclude_end_of_game(self, states: Dict[int, Board]):
+        just_finished = []
+        for key, state in states.items():
+            if state.is_end_of_game:
+                just_finished += [key]
+                print(f'ゲーム終了 idx={key}')
+        for idx in just_finished:
+            self.__save_to_csv(
+                states[idx].training_data)
+            print(states[idx].training_data.shape)
+            del states[idx]
+        return states
 
     def __save_to_csv(self, df: pd.DataFrame):
         if os.path.isfile(RESULT_FILE_PATH):

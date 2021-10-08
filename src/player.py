@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import random
+from typing import List
 from board import Board
 # import time
 from predict import Predictor
@@ -15,7 +16,7 @@ class Player(object):
 class PolicyPlayer(Player):
     clf = Predictor()
 
-    def get_dahai(self, states: Board):
+    def get_dahai(self, states: List[Board]):
         if len(states) == 0:
             return []
         # 打牌を決定する、手牌からは取り除かない
@@ -35,9 +36,18 @@ class PolicyPlayer(Player):
         # 手牌になければランダム
         select_dahais = []
         for state, dahai in zip(states, dahais):
-            tehai = state.private_tiles[state.tsumo_player]
-            select_dahais += [
-                dahai if dahai in tehai else random.choice(tehai)]
+            if state.is_tsumo_player_reach():
+                select_dahais += [dahai]
+            else:
+                tehai = state.private_tiles[state.tsumo_player]
+                if dahai in tehai:
+                    select_dahais += [dahai]
+                else:
+                    rand_dahai = random.choice(tehai)
+                    print('非合法手 ', '手牌', tehai, 'ランダム選択:', rand_dahai)
+                    select_dahais += [rand_dahai]
+            # select_dahais += [
+            #     dahai if dahai in tehai else random.choice(tehai)]
             # print(modules.utils.sort_tehai(tehai), dahai)
         return select_dahais
 

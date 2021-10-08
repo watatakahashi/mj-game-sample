@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 import random
+from typing import List
 import pandas as pd
 from modules.agari_check import agari_check, can_reach
 
@@ -45,7 +46,7 @@ class Board:
     latest_dahai: str = None
 
     # 手牌
-    private_tiles: list = field(default_factory=list)
+    private_tiles: List[str] = field(default_factory=list)
 
     # 山
     wall_tiles: list = field(default_factory=list)
@@ -127,11 +128,14 @@ class Board:
                              is_riichi=self.reaches[self.tsumo_player])
         if result.yaku is not None:
             print('ツモ和了', result, result.yaku)
-            # TODO: 上がった瞬間一旦ゲームを終了する
-            # self.is_end_of_game = True
             self.is_end_of_kyoku = True
 
         self.private_tiles[self.tsumo_player] += [self.latest_tsumo]
+
+        if len(self.private_tiles[self.tsumo_player]) not in [
+                5, 8, 11, 14]:
+            raise ValueError(
+                f'手牌の長さが不正 hai={self.private_tiles[self.tsumo_player]}')
 
         if self.is_end_of_kyoku:
             self.__end_of_kyoku()
@@ -144,18 +148,29 @@ class Board:
         """
 
         if len(hai) != 2:
-            raise ValueError(f'牌の長さが不正 hai={hai}')
+            raise ValueError(f'打牌の長さが不正 hai={hai}')
+        if len(self.private_tiles[self.tsumo_player]) not in [5, 8, 11, 14]:
+            raise ValueError(
+                f'手牌の長さが不正 hai={self.private_tiles[self.tsumo_player]}',
+                self)
 
         # 学習者かつリーチでない場合はデータの保存
-        if self.tsumo_player == self.learner and not self.reaches[self.tsumo_player]:
+        if self.tsumo_player == self.learner and not self.is_tsumo_player_reach():
             self.__save_data(hai)
 
-        if self.reaches[self.tsumo_player]:
+        if self.is_tsumo_player_reach():
             self.latest_dahai = self.latest_tsumo
         else:
             self.latest_dahai = hai
 
-        self.private_tiles[self.tsumo_player].remove(self.latest_dahai)
+        try:
+            self.private_tiles[self.tsumo_player].remove(self.latest_dahai)
+        except BaseException:
+            raise ValueError(
+                '手牌にない牌を選択 ',
+                'プレイヤー', self.tsumo_player,
+                '手牌=', self.private_tiles[self.tsumo_player],
+                'ツモ=', self.latest_dahai)
 
         self.__check_ron_agari()
 
