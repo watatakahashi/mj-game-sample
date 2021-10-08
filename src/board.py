@@ -20,6 +20,9 @@ class Board:
     # 学習者
     learner: int
 
+    # 学習データ
+    training_data = pd.DataFrame()
+
     # ゲーム終了フラグ
     is_end_of_game: bool = False
 
@@ -143,6 +146,10 @@ class Board:
         if len(hai) != 2:
             raise ValueError(f'牌の長さが不正 hai={hai}')
 
+        # 学習者かつリーチでない場合はデータの保存
+        if self.tsumo_player == self.learner and not self.reaches[self.tsumo_player]:
+            self.__save_data(hai)
+
         if self.reaches[self.tsumo_player]:
             self.latest_dahai = self.latest_tsumo
         else:
@@ -161,7 +168,6 @@ class Board:
         is_reach = not self.reaches[self.tsumo_player] and can_reach(
             self.private_tiles[self.tsumo_player])
         if is_reach:
-            print('リーチする', self.tsumo_player, is_reach)
             self.reaches[self.tsumo_player] = True
 
         # 河に追加
@@ -169,6 +175,7 @@ class Board:
 
         # ツモ番がない場合は流局
         if len(self.wall_tiles) <= MIN_LEAVE_WALL_COUNT:
+            print('流局')
             self.is_end_of_kyoku = True
 
         if self.is_end_of_kyoku:
@@ -213,6 +220,9 @@ class Board:
             self.bakaze += 1
             self.kyoku_num = 0
 
+        # 反時計回りに席移動
+        self.learner = (self.learner - 1 + 8) % 4
+
         # ゲーム終了判定、一旦西入は考慮しない
         if self.bakaze == 2:
             self.is_end_of_game = True
@@ -234,9 +244,9 @@ class Board:
             self.kyoku_num,
             self.dora_open,
             0,
-            self.reaches[(self.tsumo_player + 4 + 1) % 4],
-            self.reaches[(self.tsumo_player + 4 + 2) % 4],
-            self.reaches[(self.tsumo_player + 4 + 3) % 4],
+            1 if self.reaches[(self.tsumo_player + 4 + 1) % 4] else 0,
+            1 if self.reaches[(self.tsumo_player + 4 + 2) % 4] else 0,
+            1 if self.reaches[(self.tsumo_player + 4 + 3) % 4] else 0,
             '',
             '',
             '',
@@ -251,7 +261,13 @@ class Board:
             '',
             '1z',
         ]], columns=COLMUN)
+
         return df
+
+    def __save_data(self, hai):
+        record = self.generate_state_record()
+        record['selectedPai'] = hai
+        self.training_data = self.training_data.append(record)
 
 
 HAI_LIST = ['1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m',
