@@ -6,8 +6,13 @@ from predict import Predictor
 import pandas as pd
 
 
+class Player(object):
+    def get_dahai(self, states: Board):
+        pass
+
+
 @dataclass
-class Player:
+class PolicyPlayer(Player):
     clf = Predictor()
 
     def get_dahai(self, states: Board):
@@ -44,7 +49,7 @@ HAI_TYPES = ['0m', '1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m',
 
 
 @dataclass
-class RandomPlayer:
+class RandomPlayer(Player):
 
     def get_dahai(self, states):
         if len(states) == 0:

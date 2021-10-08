@@ -1,4 +1,4 @@
-from player import Player
+from player import Player, PolicyPlayer
 import argparse
 from dataclasses import dataclass
 from board import Board
@@ -9,7 +9,12 @@ import random
 @dataclass
 class Worker:
 
-    def run_games(self, learner, opponent, num_games=1, seed=0):
+    def run_games(
+            self,
+            learner: Player,
+            opponent: Player,
+            num_games=1,
+            seed=0):
         random.seed(seed)
 
         idxs_to_unfinished_states = {
@@ -46,15 +51,12 @@ class Worker:
                 pass
                 # TODO: 打牌に対するアクション
 
-            # 手番の更新とツモ、ツモ和了確認まで行う
+            # ゲームが終了していたらstatesから除外する
             just_finished = []
             for key, state in idxs_to_unfinished_states.items():
-                # state.__next_player()
-                # state.tsumo()
                 if state.is_end_of_game:
                     just_finished += [key]
                     print(f'ゲーム終了 idx={key}')
-            # ゲームが終了していたらstatesから除外する
             for idx in just_finished:
                 del idxs_to_unfinished_states[idx]
 
@@ -72,8 +74,8 @@ seed: int = args.seed
 
 w = Worker()
 
-learner = Player()
-opponent = Player()
+learner = PolicyPlayer()
+opponent = PolicyPlayer()
 
 start = time.time()
 
