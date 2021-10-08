@@ -18,12 +18,7 @@ class Worker:
                     i + 4) %
                 4) for i in range(num_games)}
 
-        # 東1局を開始する
-        [state.start_kyoku() for state in idxs_to_unfinished_states.values()]
-
         while len(idxs_to_unfinished_states) > 0:
-            # for i in range(500):
-            # print('順目', i)
 
             # 自分のツモ番
             learner_states = list(

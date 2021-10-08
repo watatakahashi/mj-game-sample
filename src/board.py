@@ -59,6 +59,9 @@ class Board:
     # ドラ表示牌
     dora_open: str = None
 
+    def __post_init__(self):
+        self.start_kyoku()
+
     def start_kyoku(self):
         """
         局を開始する
