@@ -26,6 +26,8 @@ class Worker:
             seed=0):
         random.seed(seed)
 
+        predict_time = 0
+
         idxs_to_unfinished_states = {
             i: Board(
                 learner=(
@@ -39,7 +41,10 @@ class Worker:
                 filter(
                     lambda state: state.tsumo_player == state.learner,
                     idxs_to_unfinished_states.values()))
+
+            start = time.time()
             dahais = learner.get_dahai(learner_states)
+            predict_time += time.time() - start
 
             # 状態の更新
             for state, dahai in zip(learner_states, dahais):
@@ -55,7 +60,10 @@ class Worker:
                 filter(
                     lambda state: state.tsumo_player != state.learner,
                     idxs_to_unfinished_states.values()))
+
+            start = time.time()
             dahais = opponent.get_dahai(not_learner_state)
+            predict_time += time.time() - start
 
             # 状態の更新
             for state, dahai in zip(not_learner_state, dahais):
@@ -68,6 +76,7 @@ class Worker:
 
             # unfinished_len = len(idxs_to_unfinished_states.values())
             # print(f'残りゲーム数={unfinished_len}')
+        print("予測実行時間:{0}".format(predict_time) + "[sec]")
 
     def __exclude_end_of_game(self, states: Dict[int, Board]):
         just_finished = []
