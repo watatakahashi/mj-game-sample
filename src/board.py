@@ -21,6 +21,9 @@ class Board:
     # 学習者
     learner: int
 
+    # 0:打牌, 1:リーチ
+    use_model: int = 0
+
     # 学習データ
     training_data = pd.DataFrame()
 
@@ -140,6 +143,8 @@ class Board:
         if self.is_end_of_kyoku:
             self.__end_of_kyoku()
 
+        self.use_model = 0
+
     def dahai(self, hai):
         """
         手牌から打牌を取り除く、ロン和了の判定を行う、リーチ判定をする、河に打牌を追加する
@@ -178,10 +183,20 @@ class Board:
             self.__end_of_kyoku()
             return
 
-        # TODO: 一旦リーチできるならリーチする
-        # シャンテン数
+        # リーチできるかどうかの確認、できる場合は一旦終了
         is_reach = not self.reaches[self.tsumo_player] and can_reach(
             self.private_tiles[self.tsumo_player])
+        if is_reach:
+            print('リーチ判断')
+            self.use_model = 1
+            return
+
+        self.after_dahai()
+
+    def after_dahai(self, is_reach=False):
+        """
+        河に追加からの処理
+        """
         if is_reach:
             self.reaches[self.tsumo_player] = True
 
@@ -192,6 +207,26 @@ class Board:
         if len(self.wall_tiles) <= MIN_LEAVE_WALL_COUNT:
             print('流局')
             self.is_end_of_kyoku = True
+
+        # TODO:アクションできるかどうかの確認、できる場合は一旦終了
+        can_action = False
+        if can_action:
+            self.use_model = 2
+            return
+
+        self.after_action()
+
+    def after_action(self, player=None, action=None):
+        """
+        アクションの処理から
+        """
+
+        if action is not None:
+            # TODO: アクション実行
+            # アクション者に手番を指定して打牌に移動
+            self.tsumo_player = player
+            self.use_model = 0
+            return
 
         if self.is_end_of_kyoku:
             self.__end_of_kyoku()

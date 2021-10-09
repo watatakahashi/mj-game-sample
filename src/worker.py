@@ -49,8 +49,6 @@ class Worker:
             # 状態の更新
             for state, dahai in zip(learner_states, dahais):
                 state.dahai(dahai)
-                pass
-                # TODO: 打牌に対するアクション
 
             idxs_to_unfinished_states = self.__exclude_end_of_game(
                 idxs_to_unfinished_states)
@@ -68,12 +66,29 @@ class Worker:
             # 状態の更新
             for state, dahai in zip(not_learner_state, dahais):
                 state.dahai(dahai)
-                pass
-                # TODO: 打牌に対するアクション
 
             idxs_to_unfinished_states = self.__exclude_end_of_game(
                 idxs_to_unfinished_states)
 
+            # リーチ判断
+            reach_states = list(
+                filter(
+                    lambda state: state.use_model == 1,
+                    idxs_to_unfinished_states.values()))
+            # TODO: モデルによる予測
+            for state in reach_states:
+                state.after_dahai(is_reach=True)
+
+            # 鳴き判断
+            action_states = list(
+                filter(
+                    lambda state: state.use_model == 2,
+                    idxs_to_unfinished_states.values()))
+            # TODO: モデルによる予測
+            for state in action_states:
+                # 鳴き〜打牌直前まで行う
+                state.after_action()
+                pass
             # unfinished_len = len(idxs_to_unfinished_states.values())
             # print(f'残りゲーム数={unfinished_len}')
         print("予測実行時間:{0}".format(predict_time) + "[sec]")
