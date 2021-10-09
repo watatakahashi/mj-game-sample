@@ -14,6 +14,9 @@ class Player(object):
     def get_reach(self, states: Board):
         pass
 
+    def get_action(self, states: List):
+        pass
+
 
 @dataclass
 class PolicyPlayer(Player):
@@ -60,7 +63,7 @@ class PolicyPlayer(Player):
 
         records = pd.DataFrame()
         for state in states:
-            records = records.append(state.generate_state_record())
+            records = records.append(state.generate_reach_state_record())
 
         # print(
         # f'手牌:{records.privateTehaiString.values}
@@ -70,6 +73,20 @@ class PolicyPlayer(Player):
 
         select_reaches = list(map(lambda is_reach: is_reach == 1, max_indexes))
         return select_reaches
+
+    def get_action(self, states: List):
+        if len(states) == 0:
+            return []
+
+        records = pd.DataFrame()
+        for state in states:
+            records = records.append(
+                state['state'].generate_action_state_record(state['player']))
+        # print(records)
+        max_indexes = self.clf.predict_action(records)
+        # print(max_indexes)
+
+        return max_indexes
 
 
 HAI_TYPES = ['0m', '1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m',

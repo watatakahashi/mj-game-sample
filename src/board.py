@@ -188,7 +188,6 @@ class Board:
         is_reach = not self.reaches[self.tsumo_player] and can_reach(
             self.private_tiles[self.tsumo_player])
         if is_reach:
-            print('リーチ判断')
             self.use_model = 1
             return
 
@@ -210,7 +209,7 @@ class Board:
             self.is_end_of_kyoku = True
 
         # TODO:アクションできるかどうかの確認、できる場合は一旦終了
-        can_action = False
+        can_action = True
         if can_action:
             self.use_model = 2
             return
@@ -311,9 +310,38 @@ class Board:
             '',
             '',
             '',
-            self.latest_dahai,  # リーチ、アクションで必要
-            0,  # 　不要
+            '1z',  # yなので不要
         ]], columns=COLMUN)
+
+        return df
+
+    def generate_reach_state_record(self):
+        """
+        リーチ用、局面レコードを取得する
+        """
+        df = self.generate_state_record()
+        df['selectedPai'] = self.latest_dahai
+        df['isReach'] = 0  # 　yなので不要
+
+        # NOTE: 先に打牌をしているので一旦手動で追加
+        if len(df.privateTehaiString.values[0]) != 13 * 2:
+            raise ValueError(
+                f'手牌の長さが不正 {df.privateTehaiString.values[0]}')
+
+        df['privateTehaiString'] = df['privateTehaiString'] + self.latest_dahai
+
+        return df
+
+    def generate_action_state_record(self, player):
+        """
+        アクション用、局面レコードを取得する
+        """
+        df = self.generate_state_record()
+        # TODO: playerに応じて視点の変更をする
+        df['player'] = player
+        df['selectedPai'] = self.latest_dahai
+        df['dahaiPlayer'] = self.tsumo_player
+        df['action'] = 0  # y
 
         return df
 
@@ -355,5 +383,4 @@ COLMUN = [
     'oppositePlayerSafetyTile',
     'upperPlayerSafetyTile',
     'selectedPai',
-    'isReach'
 ]

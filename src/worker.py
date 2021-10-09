@@ -77,8 +77,9 @@ class Worker:
                     lambda state: state.use_model == 1,
                     idxs_to_unfinished_states.values()))
 
+            start = time.time()
             reaches = learner.get_reach(reach_states)
-            print(reaches)
+            predict_time += time.time() - start
 
             for state, reach in zip(reach_states, reaches):
                 state.after_dahai(is_reach=reach)
@@ -88,7 +89,18 @@ class Worker:
                 filter(
                     lambda state: state.use_model == 2,
                     idxs_to_unfinished_states.values()))
-            # TODO: モデルによる予測
+
+            # TODO: 一旦残りの3人分の反応を予測する
+            react_action_states = []
+            for state in action_states:
+                for i in range(3):
+                    player = (state.tsumo_player + 1 + i + 4) % 4
+                    react_action_states += [{'player': player, 'state': state}]
+
+            start = time.time()
+            _ = learner.get_action(react_action_states)
+            predict_time += time.time() - start
+
             for state in action_states:
                 # 鳴き〜打牌直前まで行う
                 state.after_action()
