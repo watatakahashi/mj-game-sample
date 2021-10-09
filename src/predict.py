@@ -3,15 +3,23 @@ import numpy as np
 import os
 import time
 from sequence import PaihuDataSequence
+from reach_sequence import ReachPaihuDataSequence
 
 
 class Predictor:
     model = None
+    reach_model = None
 
     def __init__(self):
         self.model: Model = load_model(
             os.getcwd() +
             '/models/model.h5',
+            custom_objects=None,
+            compile=True,
+            options=None)
+        self.reach_model: Model = load_model(
+            os.getcwd() +
+            '/models/reach_model.h5',
             custom_objects=None,
             compile=True,
             options=None)
@@ -34,6 +42,14 @@ class Predictor:
         seq = PaihuDataSequence(df)
         encoded_x, _ = seq.__getitem__(0)
         pred = self.model.predict_on_batch(encoded_x)
+        max_indexes = np.argmax(pred, axis=1)
+        # print('max_indexes', np.round(max_indexes, 2))
+        return max_indexes
+
+    def predict_reach(self, df):
+        seq = ReachPaihuDataSequence(df)
+        encoded_x, _ = seq.__getitem__(0)
+        pred = self.reach_model.predict_on_batch(encoded_x)
         max_indexes = np.argmax(pred, axis=1)
         # print('max_indexes', np.round(max_indexes, 2))
         return max_indexes

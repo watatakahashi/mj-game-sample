@@ -11,6 +11,9 @@ class Player(object):
     def get_dahai(self, states: Board):
         pass
 
+    def get_reach(self, states: Board):
+        pass
+
 
 @dataclass
 class PolicyPlayer(Player):
@@ -50,6 +53,23 @@ class PolicyPlayer(Player):
             #     dahai if dahai in tehai else random.choice(tehai)]
             # print(modules.utils.sort_tehai(tehai), dahai)
         return select_dahais
+
+    def get_reach(self, states: List[Board]):
+        if len(states) == 0:
+            return []
+
+        records = pd.DataFrame()
+        for state in states:
+            records = records.append(state.generate_state_record())
+
+        # print(
+        # f'手牌:{records.privateTehaiString.values}
+        # ドラ表示:{records.doraOpen.values}')
+        max_indexes = self.clf.predict_reach(records)
+        # print(max_indexes)
+
+        select_reaches = list(map(lambda is_reach: is_reach == 1, max_indexes))
+        return select_reaches
 
 
 HAI_TYPES = ['0m', '1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m',

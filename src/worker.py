@@ -1,13 +1,14 @@
 import argparse
+import os
 import random
 import time
 from dataclasses import dataclass
 from typing import Dict
 
+import pandas as pd
+
 from board import Board
 from player import Player, PolicyPlayer
-import pandas as pd
-import os
 
 RESULT_FILE_PATH = 'data/sample.csv'
 
@@ -75,9 +76,12 @@ class Worker:
                 filter(
                     lambda state: state.use_model == 1,
                     idxs_to_unfinished_states.values()))
-            # TODO: モデルによる予測
-            for state in reach_states:
-                state.after_dahai(is_reach=True)
+
+            reaches = learner.get_reach(reach_states)
+            print(reaches)
+
+            for state, reach in zip(reach_states, reaches):
+                state.after_dahai(is_reach=reach)
 
             # 鳴き判断
             action_states = list(

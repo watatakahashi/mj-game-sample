@@ -3,6 +3,7 @@ import random
 from typing import List
 import pandas as pd
 from modules.agari_check import agari_check, can_reach
+from modules.utils import sort_tehai
 
 # 本来は14枚だがドラ表示牌を物理的に取り除くため一旦1枚減らしている
 # 厳密には変数になる
@@ -21,7 +22,7 @@ class Board:
     # 学習者
     learner: int
 
-    # 0:打牌, 1:リーチ
+    # 0:打牌, 1:リーチ, 2:アクション
     use_model: int = 0
 
     # 学習データ
@@ -46,7 +47,7 @@ class Board:
     latest_tsumo: str = None
 
     # 最終打牌
-    latest_dahai: str = None
+    latest_dahai: str = '1z'  # TODO: 開局第一ツモに対応
 
     # 手牌
     private_tiles: List[str] = field(default_factory=list)
@@ -285,7 +286,8 @@ class Board:
         """
         df = pd.DataFrame([[
             self.tsumo_player,  # TODO: 親番を0とするので調整する
-            ''.join(self.private_tiles[self.tsumo_player]),  # ツモ番のプレイヤー
+            # ツモ番のプレイヤー
+            ''.join(sort_tehai(self.private_tiles[self.tsumo_player])),
             ''.join(self.discards[(self.tsumo_player + 4 + 0) % 4]),
             ''.join(self.discards[(self.tsumo_player + 4 + 1) % 4]),
             ''.join(self.discards[(self.tsumo_player + 4 + 2) % 4]),
@@ -309,7 +311,8 @@ class Board:
             '',
             '',
             '',
-            '1z',
+            self.latest_dahai,  # リーチ、アクションで必要
+            0,  # 　不要
         ]], columns=COLMUN)
 
         return df
@@ -352,4 +355,5 @@ COLMUN = [
     'oppositePlayerSafetyTile',
     'upperPlayerSafetyTile',
     'selectedPai',
+    'isReach'
 ]
