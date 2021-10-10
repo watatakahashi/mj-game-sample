@@ -276,6 +276,8 @@ class Board:
         # ゲーム終了判定、一旦西入は考慮しない
         if self.bakaze == 2:
             self.is_end_of_game = True
+            self.use_model = 9
+
         else:
             self.start_kyoku()
 

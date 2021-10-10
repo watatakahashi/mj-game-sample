@@ -40,7 +40,7 @@ class Worker:
             # 自分の打牌
             learner_states = list(
                 filter(
-                    lambda state: state.tsumo_player == state.learner,
+                    lambda state: state.use_model == 0 and state.tsumo_player == state.learner,
                     idxs_to_unfinished_states.values()))
 
             start = time.time()
@@ -57,7 +57,7 @@ class Worker:
             # 自分以外の打牌
             not_learner_state = list(
                 filter(
-                    lambda state: state.tsumo_player != state.learner,
+                    lambda state: state.use_model == 0 and state.tsumo_player != state.learner,
                     idxs_to_unfinished_states.values()))
 
             start = time.time()
